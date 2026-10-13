@@ -9,9 +9,8 @@ from kafka import KafkaConsumer, KafkaProducer
 
 app = Flask(__name__)
 
-# --------------------------------------------------
-# 1. Chargement du modèle de Machine Learning
-# --------------------------------------------------
+
+# 1 chargement du modèle de Machine Learning
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "modele_commande.pkl"
@@ -21,9 +20,7 @@ model = joblib.load(MODEL_PATH)
 print("Modèle de prédiction chargé avec succès !", flush=True)
 
 
-# --------------------------------------------------
-# 2. Connexion à Kafka pour recevoir les commandes
-# --------------------------------------------------
+# 2 connexion à Kafka pour recevoir les commandes
 
 def consommer_commandes():
 
@@ -40,7 +37,7 @@ def consommer_commandes():
         )
     )
 
-    # Producteur pour publier les résultats
+    # producteur pour publier les résultats
     producer = KafkaProducer(
         bootstrap_servers=["kafka:9092"],
         value_serializer=lambda value: json.dumps(value).encode("utf-8")
@@ -49,9 +46,7 @@ def consommer_commandes():
     print("Connecté à Kafka !", flush=True)
     print("En attente de commandes...", flush=True)
 
-    # --------------------------------------------------
-    # 3. Traitement des événements reçus
-    # --------------------------------------------------
+    # 3 traitement des événements reçus
 
     for message in consumer:
 
@@ -75,9 +70,7 @@ def consommer_commandes():
             columns=features
         )
 
-        # --------------------------------------------------
-        # 4. Prédiction avec le modèle ML
-        # --------------------------------------------------
+        # 4 prédiction avec le modèle ML
 
         prediction = model.predict(X)[0]
 
@@ -89,9 +82,7 @@ def consommer_commandes():
             flush=True
         )
 
-        # --------------------------------------------------
-        # 5. Création de l'événement de prédiction
-        # --------------------------------------------------
+        # 5 création de l'événement de prédiction
 
         resultat = {
             "client_id": data["client_id"],
@@ -107,10 +98,7 @@ def consommer_commandes():
             flush=True
         )
 
-
-# --------------------------------------------------
-# 6. Route HTTP pour vérifier le service
-# --------------------------------------------------
+# 6 route HTTP pour vérifier le service
 
 @app.route("/", methods=["GET"])
 def accueil():
