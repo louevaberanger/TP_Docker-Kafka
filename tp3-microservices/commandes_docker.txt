@@ -1,0 +1,42 @@
+# Construire l'image du microservice Clients
+docker build -t microservice-clients ./clients
+
+# Construire l'image du microservice Commandes
+docker build -t microservice-commandes ./commandes
+
+# Créer le réseau Docker
+docker network create tp-reseau
+
+# Lancer le microservice Clients
+docker run -d --name clients --network tp-reseau -p 8080:8080 microservice-clients
+
+# Lancer le microservice Commandes
+docker run -d --name commandes --network tp-reseau -p 8081:8080 microservice-commandes
+
+# Vérifier les conteneurs en fonctionnement
+docker ps
+
+#démarrer les conteneurs
+docker start kafka clients commandes prediction
+
+#tester le microservice commandes
+curl http://localhost:8081/commandes
+
+#tester le microservices 
+curl http://localhost:8081/commandes/1
+
+#afficher les logs 
+docker logs commandes
+
+#arreter un conteneur
+docker stop
+
+#exemple d'une commande
+curl -X POST http://localhost:8081/commandes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": 2,
+    "produit": "Clavier",
+    "montant": 75,
+    "date": "2026-10-12"
+  }'

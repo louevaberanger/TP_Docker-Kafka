@@ -1,0 +1,12 @@
+while true; do
+  curl -s -X POST http://localhost:8081/commandes \
+    -H "Content-Type: application/json" \
+    -d '{
+      "client_id": 2,
+      "produit": "Clavier",
+      "montant": 75,
+      "date": "2026-10-11"
+    }'
+  echo
+  sleep 1
+done

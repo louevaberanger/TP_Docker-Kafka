@@ -1,0 +1,17 @@
+# Construire l'image du microservice Clients
+docker build -t microservice-clients ./clients
+
+# Construire l'image du microservice Commandes
+docker build -t microservice-commandes ./commandes
+
+# Créer le réseau Docker
+docker network create tp-reseau
+
+# Lancer le microservice Clients
+docker run -d --name clients --network tp-reseau -p 8080:8080 microservice-clients
+
+# Lancer le microservice Commandes
+docker run -d --name commandes --network tp-reseau -p 8081:8080 microservice-commandes
+
+# Vérifier les conteneurs en fonctionnement
+docker ps
