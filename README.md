@@ -78,3 +78,125 @@ docker compose down
 
 **Remarque :** ces commandes sont à exécuter depuis le dossier contenant le fichier `docker-compose.yml`. Le nom `prediction` est à remplacer par le nom réel du service dans la configuration Docker Compose.
 
+## Tester le projet : commandes Docker et API REST
+
+### 1. Construire les images Docker
+
+Les images Docker permettent de créer des conteneurs indépendants pour chaque microservice.
+
+```bash
+# Construire l'image du microservice Clients
+docker build -t microservice-clients ./clients
+
+# Construire l'image du microservice Commandes
+docker build -t microservice-commandes ./commandes
+```
+
+### 2. Créer le réseau Docker
+
+Les microservices doivent pouvoir communiquer entre eux. Le réseau Docker `tp-reseau` permet aux conteneurs qui y sont connectés de communiquer en utilisant leurs noms.
+
+```bash
+docker network create tp-reseau
+```
+
+Si le réseau existe déjà, Docker renverra une erreur indiquant que son nom est utilisé.
+
+### 3. Lancer les microservices
+
+```bash
+# Lancer le microservice Clients
+docker run -d --name clients --network tp-reseau -p 8080:8080 microservice-clients
+
+# Lancer le microservice Commandes
+docker run -d --name commandes --network tp-reseau -p 8081:8080 microservice-commandes
+```
+
+L'option `-d` lance les conteneurs en arrière-plan, tandis que `-p` permet d'accéder aux services depuis la machine hôte.
+
+* Microservice Clients : `http://localhost:8080`
+* Microservice Commandes : `http://localhost:8081`
+
+### 4. Démarrer et vérifier les conteneurs
+
+Pour démarrer des conteneurs déjà créés mais arrêtés :
+
+```bash
+docker start kafka clients commandes prediction
+```
+
+Pour vérifier les conteneurs en cours d'exécution :
+
+```bash
+docker ps
+```
+
+### 5. Tester l'API REST du microservice Commandes
+
+**Consulter toutes les commandes :**
+
+```bash
+curl http://localhost:8081/commandes
+```
+
+**Consulter une commande par son identifiant :**
+
+```bash
+curl http://localhost:8081/commandes/1
+```
+
+**Créer une nouvelle commande :**
+
+```bash
+curl -X POST http://localhost:8081/commandes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": 2,
+    "produit": "Clavier",
+    "montant": 75,
+    "date": "2026-10-12"
+  }'
+```
+
+Cette requête envoie une commande au format JSON au microservice Commandes. Si la requête est valide, le service crée la commande et, selon l'implémentation du projet, publie un événement dans le topic Kafka `commandes-creees`.
+
+### 6. Observer les logs
+
+Pour consulter les logs du microservice Commandes :
+
+```bash
+docker logs commandes
+```
+
+Pour suivre les logs en temps réel :
+
+```bash
+docker logs -f commandes
+```
+
+Les logs permettent de vérifier le traitement des requêtes et d'identifier d'éventuelles erreurs.
+
+### 7. Vérifier les événements Kafka
+
+Après avoir créé une commande, il est possible de vérifier que l'événement a été publié dans le topic `commandes-creees`, puis traité par les consommateurs `Statistiques` et `Prediction`.
+
+Pour consulter les logs des consommateurs :
+
+```bash
+docker logs -f statistiques
+docker logs -f prediction
+```
+
+L'apparition du message permet de vérifier la publication de l'événement. Les logs des consommateurs permettent ensuite d'observer son traitement.
+
+### 8. Arrêter les conteneurs
+
+Pour arrêter un conteneur spécifique :
+
+```bash
+docker stop commandes
+```
+
+Remplacer `commandes` par le nom du conteneur à arrêter.
+
+
